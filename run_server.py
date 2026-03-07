@@ -347,6 +347,7 @@ function renderCard(ev) {
 
   const groups = getMatchingGroups(ev);
   const fallbackImg = groups.length ? CAT_IMAGES[groups[0]] : CAT_IMAGES._default;
+  const hasRealImage = !!ev.image_url;
   const imgSrc = ev.image_url || fallbackImg;
 
   const titleHtml = url
@@ -365,7 +366,7 @@ function renderCard(ev) {
   }
 
   return '<div class="card">' +
-    '<img class="card-img" src="' + imgSrc + '" alt="" loading="lazy" data-fallback="' + fallbackImg + '" data-source="' + esc(url) + '" onerror="handleImgError(this)">' +
+    '<img class="card-img" src="' + imgSrc + '" alt="" loading="lazy" data-fallback="' + fallbackImg + '" data-source="' + esc(url) + '"' + (hasRealImage ? '' : ' data-needs-enrich="1"') + ' onerror="handleImgError(this)">' +
     '<div class="card-body">' +
     '<div class="card-title">' + titleHtml + '</div>' +
     (meta ? '<div class="card-meta">' + meta + '</div>' : '') +
@@ -436,6 +437,7 @@ function showMore() {
   if (filtered.length === 0) {
     feed.innerHTML = '<div class="empty">No events found</div>';
   }
+  observeNewImages();
 }
 
 document.getElementById('load-more').addEventListener('click', showMore);
@@ -499,6 +501,35 @@ function handleImgError(img) {
   } else {
     img.style.display = 'none';
   }
+}
+
+// Lazy-enrich images: when a card scrolls into view and has no real image,
+// fetch the actual event image from the source page
+const enrichObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    const img = entry.target;
+    enrichObserver.unobserve(img);
+    const sourceUrl = img.dataset.source;
+    if (!sourceUrl) return;
+    fetch(apiUrl('/enrich-image?url=' + encodeURIComponent(sourceUrl)))
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data && data.image_url) {
+          img.dataset.tried = '1';
+          img.src = data.image_url;
+        }
+      })
+      .catch(() => {});
+  });
+}, { rootMargin: '200px' });
+
+// After cards are added to the DOM, observe images that need enrichment
+function observeNewImages() {
+  document.querySelectorAll('img[data-needs-enrich="1"]').forEach(img => {
+    img.removeAttribute('data-needs-enrich');
+    enrichObserver.observe(img);
+  });
 }
 
 // Load all events (paginated fetch)
@@ -635,12 +666,19 @@ def events():
     return jsonify({"events": records, "count": len(df), "limit": limit, "offset": offset})
 
 
+_image_cache = {}  # in-memory cache: source_url -> image_url (or "")
+
+
 @app.route("/enrich-image")
 def enrich_image():
     """Fetch og:image from an event's source page to fill missing images."""
     url = request.args.get("url", "").strip()
     if not url:
         return jsonify({"error": "missing url param"}), 400
+
+    # Check in-memory cache first
+    if url in _image_cache:
+        return jsonify({"image_url": _image_cache[url]})
 
     try:
         import requests as req
@@ -655,14 +693,17 @@ def enrich_image():
             tag = soup.select_one(f'meta[property="{prop}"]') or soup.select_one(f'meta[name="{prop}"]')
             if tag and tag.get("content", "").startswith("http"):
                 image_url = tag["content"]
+                _image_cache[url] = image_url
                 # Update the CSV so we don't re-fetch next time
                 _update_csv_image(url, image_url)
                 return jsonify({"image_url": image_url})
 
+        _image_cache[url] = ""
         return jsonify({"image_url": ""})
 
     except Exception as e:
         logging.debug(f"Image enrichment failed for {url}: {e}")
+        _image_cache[url] = ""
         return jsonify({"image_url": ""})
 
 

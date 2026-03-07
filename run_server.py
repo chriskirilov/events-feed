@@ -346,7 +346,8 @@ function renderCard(ev) {
   const url = ev.source_url || '';
 
   const groups = getMatchingGroups(ev);
-  const imgSrc = ev.image_url || (groups.length ? CAT_IMAGES[groups[0]] : CAT_IMAGES._default);
+  const fallbackImg = groups.length ? CAT_IMAGES[groups[0]] : CAT_IMAGES._default;
+  const imgSrc = ev.image_url || fallbackImg;
 
   const titleHtml = url
     ? '<a href="' + url + '" target="_blank" rel="noopener">' + esc(title) + '</a>'
@@ -364,7 +365,7 @@ function renderCard(ev) {
   }
 
   return '<div class="card">' +
-    '<img class="card-img" src="' + imgSrc + '" alt="" loading="lazy" onerror="this.classList.add(\'hidden\')">' +
+    '<img class="card-img" src="' + imgSrc + '" alt="" loading="lazy" data-fallback="' + fallbackImg + '" data-source="' + esc(url) + '" onerror="handleImgError(this)">' +
     '<div class="card-body">' +
     '<div class="card-title">' + titleHtml + '</div>' +
     (meta ? '<div class="card-meta">' + meta + '</div>' : '') +
@@ -461,6 +462,44 @@ searchInput.addEventListener('input', e => {
     applyFilters();
   }, 200);
 });
+
+// Handle broken images: try server-side enrichment, then fall back to category placeholder
+function handleImgError(img) {
+  const fallback = img.dataset.fallback || '';
+  const sourceUrl = img.dataset.source || '';
+  // If image already tried enrichment or is already on fallback, hide it
+  if (img.dataset.tried) {
+    if (fallback && img.src !== fallback) {
+      img.src = fallback;
+    } else {
+      img.style.display = 'none';
+    }
+    return;
+  }
+  img.dataset.tried = '1';
+  // Try server-side enrichment via source URL
+  if (sourceUrl) {
+    fetch(apiUrl('/enrich-image?url=' + encodeURIComponent(sourceUrl)))
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data && data.image_url) {
+          img.src = data.image_url;
+        } else if (fallback) {
+          img.src = fallback;
+        } else {
+          img.style.display = 'none';
+        }
+      })
+      .catch(() => {
+        if (fallback) img.src = fallback;
+        else img.style.display = 'none';
+      });
+  } else if (fallback) {
+    img.src = fallback;
+  } else {
+    img.style.display = 'none';
+  }
+}
 
 // Load all events (paginated fetch)
 async function loadAll() {
@@ -589,9 +628,56 @@ def events():
     limit = int(request.args.get("limit", "100"))
     offset = int(request.args.get("offset", "0"))
 
+    if "image_url" not in df.columns:
+        df["image_url"] = ""
     chunk = df.iloc[offset:offset + limit].fillna("")
     records = chunk.to_dict(orient="records")
     return jsonify({"events": records, "count": len(df), "limit": limit, "offset": offset})
+
+
+@app.route("/enrich-image")
+def enrich_image():
+    """Fetch og:image from an event's source page to fill missing images."""
+    url = request.args.get("url", "").strip()
+    if not url:
+        return jsonify({"error": "missing url param"}), 400
+
+    try:
+        import requests as req
+        from bs4 import BeautifulSoup
+
+        resp = req.get(url, timeout=8, headers={"User-Agent": "Mozilla/5.0"})
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, "html.parser")
+
+        # Try og:image first, then twitter:image
+        for prop in ("og:image", "twitter:image"):
+            tag = soup.select_one(f'meta[property="{prop}"]') or soup.select_one(f'meta[name="{prop}"]')
+            if tag and tag.get("content", "").startswith("http"):
+                image_url = tag["content"]
+                # Update the CSV so we don't re-fetch next time
+                _update_csv_image(url, image_url)
+                return jsonify({"image_url": image_url})
+
+        return jsonify({"image_url": ""})
+
+    except Exception as e:
+        logging.debug(f"Image enrichment failed for {url}: {e}")
+        return jsonify({"image_url": ""})
+
+
+def _update_csv_image(source_url: str, image_url: str):
+    """Persist an enriched image_url back into the CSV."""
+    try:
+        df = pd.read_csv(CSV_PATH)
+        if "image_url" not in df.columns:
+            df["image_url"] = ""
+        mask = df["source_url"].astype(str) == source_url
+        if mask.any():
+            df.loc[mask, "image_url"] = image_url
+            df.to_csv(CSV_PATH, index=False)
+    except Exception as e:
+        logging.debug(f"CSV image update failed: {e}")
 
 
 @app.route("/events/count")

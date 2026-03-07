@@ -99,8 +99,28 @@ FEED_HTML = """<!DOCTYPE html>
     background: #0a0a0a; color: #e0e0e0;
     padding: 16px; padding-bottom: 80px;
   }
-  h1 { font-size: 22px; margin-bottom: 4px; }
-  .subtitle { color: #888; font-size: 13px; margin-bottom: 14px; }
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; padding: 2px 0;
+  }
+  .profile-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #fff; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .header-title {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 20px; font-weight: 600; letter-spacing: 0.3px;
+    color: #f0f0f0;
+  }
+  .chat-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid #333; background: #1a1a1a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #ccc; cursor: pointer; flex-shrink: 0;
+  }
 
   .toolbar {
     display: flex; align-items: center; gap: 0;
@@ -191,8 +211,15 @@ FEED_HTML = """<!DOCTYPE html>
 </head>
 <body>
 
-<h1>SF Events</h1>
-<p class="subtitle"><span id="count">...</span> events</p>
+<div class="header">
+  <div class="profile-icon">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  </div>
+  <span class="header-title">San Francisco</span>
+  <div class="chat-icon">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </div>
+</div>
 
 <div class="toolbar">
   <div class="search-wrap">
@@ -440,7 +467,7 @@ async function loadAll() {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const data = await r.json();
       allEvents = allEvents.concat(data.events);
-      document.getElementById('count').textContent = data.count;
+      // count available in data.count if needed
       if (offset + limit >= data.count) break;
       offset += limit;
     }

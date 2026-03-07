@@ -181,6 +181,12 @@ let shown = 0;
 let activeCat = 'all';
 let searchTerm = '';
 
+// Forward ?key= param so API auth works from the feed page
+const urlKey = new URLSearchParams(window.location.search).get('key');
+function apiUrl(path) {
+  return urlKey ? path + (path.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(urlKey) : path;
+}
+
 function formatDate(d) {
   if (!d) return '';
   try {
@@ -287,24 +293,30 @@ document.getElementById('search').addEventListener('input', e => {
 // Load all events (paginated fetch)
 async function loadAll() {
   document.getElementById('spinner').style.display = 'block';
-  let offset = 0;
-  const limit = 500;
-  while (true) {
-    const r = await fetch('/events?limit=' + limit + '&offset=' + offset);
-    const data = await r.json();
-    allEvents = allEvents.concat(data.events);
-    document.getElementById('count').textContent = data.count;
-    if (offset + limit >= data.count) break;
-    offset += limit;
+  try {
+    let offset = 0;
+    const limit = 500;
+    while (true) {
+      const r = await fetch(apiUrl('/events?limit=' + limit + '&offset=' + offset));
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      allEvents = allEvents.concat(data.events);
+      document.getElementById('count').textContent = data.count;
+      if (offset + limit >= data.count) break;
+      offset += limit;
+    }
+    // Sort by start_time descending (upcoming first)
+    allEvents.sort((a, b) => {
+      const da = new Date(a.start_time || 0);
+      const db = new Date(b.start_time || 0);
+      return db - da;
+    });
+    applyFilters();
+  } catch (err) {
+    document.getElementById('feed').innerHTML =
+      '<div class="empty">Failed to load events: ' + esc(err.message) + '</div>';
   }
-  // Sort by start_time descending (upcoming first)
-  allEvents.sort((a, b) => {
-    const da = new Date(a.start_time || 0);
-    const db = new Date(b.start_time || 0);
-    return db - da;
-  });
   document.getElementById('spinner').style.display = 'none';
-  applyFilters();
 }
 loadAll();
 </script>

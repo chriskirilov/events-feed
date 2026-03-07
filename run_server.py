@@ -100,17 +100,59 @@ FEED_HTML = """<!DOCTYPE html>
     padding: 16px; padding-bottom: 80px;
   }
   h1 { font-size: 22px; margin-bottom: 4px; }
-  .subtitle { color: #888; font-size: 13px; margin-bottom: 16px; }
+  .subtitle { color: #888; font-size: 13px; margin-bottom: 14px; }
+
+  .toolbar {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 16px; overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .toolbar::-webkit-scrollbar { display: none; }
+
+  .search-wrap {
+    display: flex; align-items: center; flex-shrink: 0;
+    position: relative;
+  }
+  .search-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1px solid #333; background: #1a1a1a; color: #ccc;
+    font-size: 18px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .search-btn.active { background: #fff; color: #000; border-color: #fff; }
+  .search-input {
+    width: 0; opacity: 0; padding: 0; border: none;
+    background: #1a1a1a; color: #e0e0e0; font-size: 14px;
+    border-radius: 19px; height: 38px; outline: none;
+    transition: width 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
+  }
+  .search-input.open {
+    width: 160px; opacity: 1; padding: 0 14px;
+    border: 1px solid #333; margin-left: 6px;
+  }
+  .search-input.open:focus { border-color: #555; }
+
+  .divider {
+    width: 1px; height: 24px; background: #333;
+    margin: 0 10px; flex-shrink: 0;
+  }
+
   .filters {
-    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px;
-    margin-bottom: 16px; -webkit-overflow-scrolling: touch;
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
   }
   .filters button {
-    flex-shrink: 0; padding: 6px 14px; border-radius: 20px;
+    flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%;
     border: 1px solid #333; background: #1a1a1a; color: #ccc;
-    font-size: 13px; cursor: pointer; white-space: nowrap;
+    font-size: 18px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    padding: 0; line-height: 1;
   }
   .filters button.active { background: #fff; color: #000; border-color: #fff; }
+  .filters button .lbl {
+    display: none;
+  }
+
   .card {
     background: #151515; border: 1px solid #222; border-radius: 12px;
     padding: 14px; margin-bottom: 12px;
@@ -140,12 +182,6 @@ FEED_HTML = """<!DOCTYPE html>
   }
   .load-more:hover { background: #252525; }
   .spinner { display: none; text-align: center; padding: 20px; color: #666; }
-  .search-box {
-    width: 100%; padding: 10px 14px; border-radius: 10px;
-    border: 1px solid #333; background: #1a1a1a; color: #e0e0e0;
-    font-size: 14px; margin-bottom: 12px; outline: none;
-  }
-  .search-box:focus { border-color: #555; }
   .empty { text-align: center; padding: 40px 0; color: #666; }
 </style>
 </head>
@@ -154,19 +190,24 @@ FEED_HTML = """<!DOCTYPE html>
 <h1>SF Events</h1>
 <p class="subtitle"><span id="count">...</span> events</p>
 
-<input class="search-box" type="text" placeholder="Search events..." id="search">
-
-<div class="filters" id="filters">
-  <button class="active" data-cat="all">All</button>
-  <button data-cat="music">Music</button>
-  <button data-cat="food_and_drink">Food & Drink</button>
-  <button data-cat="arts_and_culture">Arts</button>
-  <button data-cat="tech">Tech</button>
-  <button data-cat="sports_and_fitness">Sports</button>
-  <button data-cat="nightlife">Nightlife</button>
-  <button data-cat="family_and_kids">Family</button>
-  <button data-cat="community">Community</button>
-  <button data-cat="other">Other</button>
+<div class="toolbar">
+  <div class="search-wrap">
+    <button class="search-btn" id="search-btn">&#x1F50D;</button>
+    <input class="search-input" type="text" placeholder="Search..." id="search">
+  </div>
+  <div class="divider"></div>
+  <div class="filters" id="filters">
+    <button class="active" data-cat="all" title="All">&#x2728;</button>
+    <button data-cat="music" title="Music">&#x1F3B5;</button>
+    <button data-cat="food_and_drink" title="Food & Drink">&#x1F37D;&#xFE0F;</button>
+    <button data-cat="arts_and_culture" title="Arts & Culture">&#x1F3A8;</button>
+    <button data-cat="tech" title="Tech">&#x1F4BB;</button>
+    <button data-cat="sports_and_fitness" title="Sports">&#x1F3C3;</button>
+    <button data-cat="nightlife" title="Nightlife">&#x1F378;</button>
+    <button data-cat="family_and_kids" title="Family">&#x1F46A;</button>
+    <button data-cat="community" title="Community">&#x1F91D;</button>
+    <button data-cat="other" title="Other">&#x1F4CC;</button>
+  </div>
 </div>
 
 <div id="feed"></div>
@@ -180,6 +221,33 @@ let filtered = [];
 let shown = 0;
 let activeCat = 'all';
 let searchTerm = '';
+
+// Search expand/collapse
+const searchBtn = document.getElementById('search-btn');
+const searchInput = document.getElementById('search');
+let searchOpen = false;
+
+searchBtn.addEventListener('click', () => {
+  searchOpen = !searchOpen;
+  searchInput.classList.toggle('open', searchOpen);
+  searchBtn.classList.toggle('active', searchOpen);
+  if (searchOpen) {
+    searchInput.focus();
+  } else {
+    searchInput.value = '';
+    searchTerm = '';
+    applyFilters();
+  }
+});
+
+// Close search if user taps away on empty search
+searchInput.addEventListener('blur', () => {
+  if (!searchInput.value) {
+    searchOpen = false;
+    searchInput.classList.remove('open');
+    searchBtn.classList.remove('active');
+  }
+});
 
 // Forward ?key= param so API auth works from the feed page
 const urlKey = new URLSearchParams(window.location.search).get('key');
@@ -274,15 +342,16 @@ function showMore() {
 document.getElementById('load-more').addEventListener('click', showMore);
 
 document.getElementById('filters').addEventListener('click', e => {
-  if (e.target.tagName !== 'BUTTON') return;
+  const btn = e.target.closest('button');
+  if (!btn) return;
   document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
-  e.target.classList.add('active');
-  activeCat = e.target.dataset.cat;
+  btn.classList.add('active');
+  activeCat = btn.dataset.cat;
   applyFilters();
 });
 
 let searchTimeout;
-document.getElementById('search').addEventListener('input', e => {
+searchInput.addEventListener('input', e => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
     searchTerm = e.target.value;

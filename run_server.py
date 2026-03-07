@@ -181,25 +181,51 @@ FEED_HTML = """<!DOCTYPE html>
     text-decoration: none; color: inherit; display: block;
   }
   .card {
-    background: #151515; border: 1px solid #222; border-radius: 12px;
-    margin-bottom: 12px; overflow: hidden;
-    display: flex; flex-direction: row;
+    background: #151515; border: 1px solid #222; border-radius: 14px;
+    margin-bottom: 14px; overflow: hidden;
+    display: flex; flex-direction: column; position: relative;
   }
-  .card:active { background: #1e1e1e; }
+  .card:active { opacity: 0.92; }
+  .card-img-wrap {
+    position: relative; width: 100%; height: 160px; overflow: hidden;
+    background: #1a1a1a;
+  }
   .card-img {
-    width: 90px; min-height: 90px; object-fit: cover; display: block;
-    flex-shrink: 0; border-radius: 12px 0 0 12px;
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: opacity 0.3s;
   }
   .card-img.hidden { display: none; }
+  .card-img-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    pointer-events: none;
+  }
+  .card-date-badge {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 8px; padding: 4px 8px;
+    font-size: 11px; font-weight: 600; color: #fff;
+    line-height: 1.3; text-align: center;
+  }
+  .card-date-badge .date-month { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #ff6b6b; }
+  .card-cat-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 6px; padding: 3px 7px;
+    font-size: 13px;
+  }
   .card-body {
-    padding: 12px; flex: 1; min-width: 0;
+    padding: 12px 14px; flex: 1; min-width: 0;
   }
   .card-title {
     font-size: 15px; font-weight: 600; margin-bottom: 4px;
     line-height: 1.3;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
   }
-  .card-meta { font-size: 11px; color: #888; margin-bottom: 6px; }
+  .card-meta { font-size: 11px; color: #888; margin-bottom: 4px; }
   .card-meta span { margin-right: 10px; }
   .card-desc {
     font-size: 12px; color: #aaa; line-height: 1.4;
@@ -320,17 +346,73 @@ const CAT_EMOJIS = {
 };
 
 const CAT_IMAGES = {
-  music:     'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=600&q=75',
-  arts:      'https://images.unsplash.com/photo-1536924940846-227afb31e2a5?w=600&q=75',
-  food:      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=75',
-  sports:    'https://images.unsplash.com/photo-1461896836934-bd45ba8482fe?w=600&q=75',
-  nightlife: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=600&q=75',
-  community: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=600&q=75',
-  learning:  'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=600&q=75',
-  outdoors:  'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=600&q=75',
-  family:    'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&q=75',
-  _default:  'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&q=75',
+  music: [
+    'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&q=80',
+    'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
+    'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80',
+    'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80',
+  ],
+  arts: [
+    'https://images.unsplash.com/photo-1536924940846-227afb31e2a5?w=800&q=80',
+    'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800&q=80',
+    'https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=800&q=80',
+    'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&q=80',
+  ],
+  food: [
+    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80',
+    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80',
+    'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80',
+    'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&q=80',
+  ],
+  sports: [
+    'https://images.unsplash.com/photo-1461896836934-bd45ba8482fe?w=800&q=80',
+    'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=800&q=80',
+    'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80',
+    'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800&q=80',
+  ],
+  nightlife: [
+    'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80',
+    'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80',
+    'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&q=80',
+    'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80',
+  ],
+  community: [
+    'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&q=80',
+    'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80',
+    'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&q=80',
+    'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&q=80',
+  ],
+  learning: [
+    'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&q=80',
+    'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80',
+    'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
+    'https://images.unsplash.com/photo-1513258496099-48168024aec0?w=800&q=80',
+  ],
+  outdoors: [
+    'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&q=80',
+    'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80',
+    'https://images.unsplash.com/photo-1501555088652-021faa106b9b?w=800&q=80',
+    'https://images.unsplash.com/photo-1533240332313-0db49b459ad6?w=800&q=80',
+  ],
+  family: [
+    'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&q=80',
+    'https://images.unsplash.com/photo-1536640712-4d4c36ff0e4e?w=800&q=80',
+    'https://images.unsplash.com/photo-1472586662442-3eec04b9dbda?w=800&q=80',
+    'https://images.unsplash.com/photo-1609220136736-443140cffec6?w=800&q=80',
+  ],
+  _default: [
+    'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80',
+    'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
+    'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&q=80',
+    'https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800&q=80',
+  ],
 };
+function pickCatImage(cat, title) {
+  const imgs = CAT_IMAGES[cat] || CAT_IMAGES._default;
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) hash = ((hash << 5) - hash + title.charCodeAt(i)) | 0;
+  return imgs[Math.abs(hash) % imgs.length];
+}
 
 function getMatchingGroups(ev) {
   const groups = [];
@@ -348,30 +430,46 @@ function renderCard(ev) {
   const url = ev.source_url || '';
 
   const groups = getMatchingGroups(ev);
-  const fallbackImg = groups.length ? CAT_IMAGES[groups[0]] : CAT_IMAGES._default;
+  const fallbackCat = groups.length ? groups[0] : '_default';
+  const fallbackImg = pickCatImage(fallbackCat, title);
   const hasRealImage = !!ev.image_url;
   const imgSrc = ev.image_url || fallbackImg;
 
   const titleHtml = esc(title);
 
-  let meta = '';
-  if (date) meta += '<span>' + date + '</span>';
-  if (loc) meta += '<span>' + esc(loc) + '</span>';
+  let locHtml = loc ? '<span>' + esc(loc) + '</span>' : '';
 
-  let iconsHtml = '';
+  // Date badge overlay
+  let dateBadge = '';
+  if (ev.start_time) {
+    try {
+      const dt = new Date(ev.start_time);
+      if (!isNaN(dt)) {
+        const mon = dt.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+        const day = dt.getDate();
+        dateBadge = '<div class="card-date-badge"><div class="date-month">' + mon + '</div>' + day + '</div>';
+      }
+    } catch {}
+  }
+
+  // Category emoji badge
+  let catBadge = '';
   if (groups.length) {
-    iconsHtml = '<div class="cat-icons">' +
+    catBadge = '<div class="card-cat-badge">' +
       groups.map(g => '<span title="' + g + '">' + CAT_EMOJIS[g] + '</span>').join('') +
       '</div>';
   }
 
   const inner = '<div class="card">' +
+    '<div class="card-img-wrap">' +
     '<img class="card-img" src="' + imgSrc + '" alt="" loading="lazy" data-fallback="' + fallbackImg + '" data-source="' + esc(url) + '"' + (hasRealImage ? '' : ' data-needs-enrich="1"') + ' onerror="handleImgError(this)">' +
+    '<div class="card-img-overlay"></div>' +
+    dateBadge + catBadge +
+    '</div>' +
     '<div class="card-body">' +
     '<div class="card-title">' + titleHtml + '</div>' +
-    (meta ? '<div class="card-meta">' + meta + '</div>' : '') +
+    (date || locHtml ? '<div class="card-meta">' + (date ? '<span>' + date + '</span>' : '') + locHtml + '</div>' : '') +
     '<div class="card-desc">' + esc(desc) + '</div>' +
-    iconsHtml +
     '</div></div>';
 
   if (url) {

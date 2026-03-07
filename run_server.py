@@ -180,25 +180,31 @@ FEED_HTML = """<!DOCTYPE html>
   .card {
     background: #151515; border: 1px solid #222; border-radius: 12px;
     margin-bottom: 12px; overflow: hidden;
+    display: flex; flex-direction: row;
   }
   .card-img {
-    width: 100%; height: 160px; object-fit: cover; display: block;
+    width: 90px; min-height: 90px; object-fit: cover; display: block;
+    flex-shrink: 0; border-radius: 12px 0 0 12px;
   }
-  .card-body { padding: 14px; }
+  .card-img.hidden { display: none; }
+  .card-body {
+    padding: 12px; flex: 1; min-width: 0;
+  }
   .card-title {
-    font-size: 16px; font-weight: 600; margin-bottom: 6px;
+    font-size: 15px; font-weight: 600; margin-bottom: 4px;
     line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .card-title a { color: #e0e0e0; text-decoration: none; }
   .card-title a:hover { text-decoration: underline; }
-  .card-meta { font-size: 12px; color: #888; margin-bottom: 8px; }
-  .card-meta span { margin-right: 12px; }
+  .card-meta { font-size: 11px; color: #888; margin-bottom: 6px; }
+  .card-meta span { margin-right: 10px; }
   .card-desc {
-    font-size: 13px; color: #aaa; line-height: 1.5;
-    display: -webkit-box; -webkit-line-clamp: 3;
+    font-size: 12px; color: #aaa; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2;
     -webkit-box-orient: vertical; overflow: hidden;
   }
-  .cat-icons { margin-top: 8px; display: flex; gap: 4px; font-size: 16px; }
+  .cat-icons { margin-top: 6px; display: flex; gap: 4px; font-size: 14px; }
   .load-more {
     display: block; width: 100%; padding: 14px; margin-top: 8px;
     border-radius: 12px; border: 1px solid #333; background: #1a1a1a;
@@ -358,7 +364,7 @@ function renderCard(ev) {
   }
 
   return '<div class="card">' +
-    '<img class="card-img" src="' + imgSrc + '" alt="" loading="lazy">' +
+    '<img class="card-img" src="' + imgSrc + '" alt="" loading="lazy" onerror="this.classList.add(\'hidden\')">' +
     '<div class="card-body">' +
     '<div class="card-title">' + titleHtml + '</div>' +
     (meta ? '<div class="card-meta">' + meta + '</div>' : '') +

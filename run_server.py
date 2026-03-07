@@ -197,7 +197,6 @@ FEED_HTML = """<!DOCTYPE html>
   </div>
   <div class="divider"></div>
   <div class="filters" id="filters">
-    <button class="active" data-cat="all" title="All">&#x2728;</button>
     <button data-cat="music" title="Music">&#x1F3B5;</button>
     <button data-cat="arts" title="Arts & Culture">&#x1F3A8;</button>
     <button data-cat="food" title="Food & Drink">&#x1F37D;&#xFE0F;</button>
@@ -219,7 +218,7 @@ const PAGE = 50;
 let allEvents = [];
 let filtered = [];
 let shown = 0;
-let activeCat = 'all';
+let activeCat = null;
 let searchTerm = '';
 
 // Search expand/collapse
@@ -345,7 +344,7 @@ function matchesCat(ev, group) {
 
 function applyFilters() {
   filtered = allEvents.filter(ev => {
-    if (activeCat !== 'all' && !matchesCat(ev, activeCat)) return false;
+    if (activeCat && !matchesCat(ev, activeCat)) return false;
     if (searchTerm) {
       const s = searchTerm.toLowerCase();
       const hay = ((ev.title || '') + ' ' + (ev.description || '') + ' ' + (ev.location || '') + ' ' + (ev.tags || '')).toLowerCase();
@@ -375,9 +374,14 @@ document.getElementById('load-more').addEventListener('click', showMore);
 document.getElementById('filters').addEventListener('click', e => {
   const btn = e.target.closest('button');
   if (!btn) return;
-  document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  activeCat = btn.dataset.cat;
+  if (btn.classList.contains('active')) {
+    btn.classList.remove('active');
+    activeCat = null;
+  } else {
+    document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+  }
   applyFilters();
 });
 

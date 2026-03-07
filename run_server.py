@@ -142,21 +142,29 @@ FEED_HTML = """<!DOCTYPE html>
     display: flex; align-items: center; gap: 6px; flex-shrink: 0;
   }
   .filters button {
-    flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%;
+    flex-shrink: 0; height: 38px; border-radius: 19px;
     border: 1px solid #333; background: #1a1a1a; color: #ccc;
     font-size: 18px; cursor: pointer; display: flex;
     align-items: center; justify-content: center;
-    padding: 0; line-height: 1;
+    padding: 0 10px; line-height: 1;
+    transition: all 0.2s ease; min-width: 38px;
   }
+  .filters button:not(.active) { width: 38px; padding: 0; border-radius: 50%; }
   .filters button.active { background: #fff; color: #000; border-color: #fff; }
   .filters button .lbl {
-    display: none;
+    display: none; font-size: 13px; font-weight: 600;
+    margin-left: 5px; white-space: nowrap;
   }
+  .filters button.active .lbl { display: inline; }
 
   .card {
     background: #151515; border: 1px solid #222; border-radius: 12px;
-    padding: 14px; margin-bottom: 12px;
+    margin-bottom: 12px; overflow: hidden;
   }
+  .card-img {
+    width: 100%; height: 160px; object-fit: cover; display: block;
+  }
+  .card-body { padding: 14px; }
   .card-title {
     font-size: 16px; font-weight: 600; margin-bottom: 6px;
     line-height: 1.3;
@@ -170,11 +178,7 @@ FEED_HTML = """<!DOCTYPE html>
     display: -webkit-box; -webkit-line-clamp: 3;
     -webkit-box-orient: vertical; overflow: hidden;
   }
-  .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
-  .tag {
-    font-size: 11px; padding: 3px 8px; border-radius: 10px;
-    background: #1e1e2e; color: #8888cc;
-  }
+  .cat-icons { margin-top: 8px; display: flex; gap: 4px; font-size: 16px; }
   .load-more {
     display: block; width: 100%; padding: 14px; margin-top: 8px;
     border-radius: 12px; border: 1px solid #333; background: #1a1a1a;
@@ -197,15 +201,15 @@ FEED_HTML = """<!DOCTYPE html>
   </div>
   <div class="divider"></div>
   <div class="filters" id="filters">
-    <button data-cat="music" title="Music">&#x1F3B5;</button>
-    <button data-cat="arts" title="Arts & Culture">&#x1F3A8;</button>
-    <button data-cat="food" title="Food & Drink">&#x1F37D;&#xFE0F;</button>
-    <button data-cat="sports" title="Sports & Fitness">&#x1F3C3;</button>
-    <button data-cat="nightlife" title="Nightlife & Comedy">&#x1F378;</button>
-    <button data-cat="community" title="Community">&#x1F91D;</button>
-    <button data-cat="learning" title="Learning">&#x1F4DA;</button>
-    <button data-cat="outdoors" title="Outdoors & Festivals">&#x1F333;</button>
-    <button data-cat="family" title="Family & Kids">&#x1F46A;</button>
+    <button data-cat="music" title="Music">&#x1F3B5;<span class="lbl">Music</span></button>
+    <button data-cat="arts" title="Arts & Culture">&#x1F3A8;<span class="lbl">Arts</span></button>
+    <button data-cat="food" title="Food & Drink">&#x1F37D;&#xFE0F;<span class="lbl">Food</span></button>
+    <button data-cat="sports" title="Sports & Fitness">&#x1F3C3;<span class="lbl">Sports</span></button>
+    <button data-cat="nightlife" title="Nightlife & Comedy">&#x1F378;<span class="lbl">Nightlife</span></button>
+    <button data-cat="community" title="Community">&#x1F91D;<span class="lbl">Community</span></button>
+    <button data-cat="learning" title="Learning">&#x1F4DA;<span class="lbl">Learning</span></button>
+    <button data-cat="outdoors" title="Outdoors & Festivals">&#x1F333;<span class="lbl">Outdoors</span></button>
+    <button data-cat="family" title="Family & Kids">&#x1F46A;<span class="lbl">Family</span></button>
   </div>
 </div>
 
@@ -274,13 +278,42 @@ function parseTags(t) {
   } catch { return []; }
 }
 
+const CAT_EMOJIS = {
+  music: '\u{1F3B5}', arts: '\u{1F3A8}', food: '\u{1F37D}\uFE0F',
+  sports: '\u{1F3C3}', nightlife: '\u{1F378}', community: '\u{1F91D}',
+  learning: '\u{1F4DA}', outdoors: '\u{1F333}', family: '\u{1F46A}'
+};
+
+const CAT_IMAGES = {
+  music:     'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=600&q=75',
+  arts:      'https://images.unsplash.com/photo-1536924940846-227afb31e2a5?w=600&q=75',
+  food:      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=75',
+  sports:    'https://images.unsplash.com/photo-1461896836934-bd45ba8482fe?w=600&q=75',
+  nightlife: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=600&q=75',
+  community: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=600&q=75',
+  learning:  'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=600&q=75',
+  outdoors:  'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=600&q=75',
+  family:    'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&q=75',
+  _default:  'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&q=75',
+};
+
+function getMatchingGroups(ev) {
+  const groups = [];
+  for (const g of Object.keys(CAT_GROUPS)) {
+    if (matchesCat(ev, g)) groups.push(g);
+  }
+  return groups;
+}
+
 function renderCard(ev) {
-  const tags = parseTags(ev.tags);
   const title = ev.title || 'Untitled';
   const desc = ev.description || '';
   const loc = ev.location || '';
   const date = formatDate(ev.start_time);
   const url = ev.source_url || '';
+
+  const groups = getMatchingGroups(ev);
+  const imgSrc = groups.length ? CAT_IMAGES[groups[0]] : CAT_IMAGES._default;
 
   const titleHtml = url
     ? '<a href="' + url + '" target="_blank" rel="noopener">' + esc(title) + '</a>'
@@ -290,19 +323,21 @@ function renderCard(ev) {
   if (date) meta += '<span>' + date + '</span>';
   if (loc) meta += '<span>' + esc(loc) + '</span>';
 
-  let tagsHtml = '';
-  if (tags.length) {
-    tagsHtml = '<div class="tags">' +
-      tags.slice(0, 4).map(t => '<span class="tag">' + esc(t) + '</span>').join('') +
+  let iconsHtml = '';
+  if (groups.length) {
+    iconsHtml = '<div class="cat-icons">' +
+      groups.map(g => '<span title="' + g + '">' + CAT_EMOJIS[g] + '</span>').join('') +
       '</div>';
   }
 
   return '<div class="card">' +
+    '<img class="card-img" src="' + imgSrc + '" alt="" loading="lazy">' +
+    '<div class="card-body">' +
     '<div class="card-title">' + titleHtml + '</div>' +
     (meta ? '<div class="card-meta">' + meta + '</div>' : '') +
     '<div class="card-desc">' + esc(desc) + '</div>' +
-    tagsHtml +
-    '</div>';
+    iconsHtml +
+    '</div></div>';
 }
 
 function esc(s) {

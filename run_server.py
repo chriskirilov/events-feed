@@ -417,7 +417,8 @@ def events():
     limit = int(request.args.get("limit", "100"))
     offset = int(request.args.get("offset", "0"))
 
-    records = df.iloc[offset:offset + limit].to_dict(orient="records")
+    chunk = df.iloc[offset:offset + limit].fillna("")
+    records = chunk.to_dict(orient="records")
     return jsonify({"events": records, "count": len(df), "limit": limit, "offset": offset})
 
 

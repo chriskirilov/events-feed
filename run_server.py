@@ -177,11 +177,15 @@ FEED_HTML = """<!DOCTYPE html>
   }
   .filters button.active .lbl { display: inline; }
 
+  .card-link {
+    text-decoration: none; color: inherit; display: block;
+  }
   .card {
     background: #151515; border: 1px solid #222; border-radius: 12px;
     margin-bottom: 12px; overflow: hidden;
     display: flex; flex-direction: row;
   }
+  .card:active { background: #1e1e1e; }
   .card-img {
     width: 90px; min-height: 90px; object-fit: cover; display: block;
     flex-shrink: 0; border-radius: 12px 0 0 12px;
@@ -195,8 +199,6 @@ FEED_HTML = """<!DOCTYPE html>
     line-height: 1.3;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .card-title a { color: #e0e0e0; text-decoration: none; }
-  .card-title a:hover { text-decoration: underline; }
   .card-meta { font-size: 11px; color: #888; margin-bottom: 6px; }
   .card-meta span { margin-right: 10px; }
   .card-desc {
@@ -350,9 +352,7 @@ function renderCard(ev) {
   const hasRealImage = !!ev.image_url;
   const imgSrc = ev.image_url || fallbackImg;
 
-  const titleHtml = url
-    ? '<a href="' + url + '" target="_blank" rel="noopener">' + esc(title) + '</a>'
-    : esc(title);
+  const titleHtml = esc(title);
 
   let meta = '';
   if (date) meta += '<span>' + date + '</span>';
@@ -365,7 +365,7 @@ function renderCard(ev) {
       '</div>';
   }
 
-  return '<div class="card">' +
+  const inner = '<div class="card">' +
     '<img class="card-img" src="' + imgSrc + '" alt="" loading="lazy" data-fallback="' + fallbackImg + '" data-source="' + esc(url) + '"' + (hasRealImage ? '' : ' data-needs-enrich="1"') + ' onerror="handleImgError(this)">' +
     '<div class="card-body">' +
     '<div class="card-title">' + titleHtml + '</div>' +
@@ -373,6 +373,11 @@ function renderCard(ev) {
     '<div class="card-desc">' + esc(desc) + '</div>' +
     iconsHtml +
     '</div></div>';
+
+  if (url) {
+    return '<a class="card-link" href="' + url + '" target="_blank" rel="noopener">' + inner + '</a>';
+  }
+  return inner;
 }
 
 function esc(s) {

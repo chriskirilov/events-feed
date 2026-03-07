@@ -432,8 +432,10 @@ function renderCard(ev) {
   const groups = getMatchingGroups(ev);
   const fallbackCat = groups.length ? groups[0] : '_default';
   const fallbackImg = pickCatImage(fallbackCat, title);
-  const hasRealImage = !!ev.image_url;
-  const imgSrc = ev.image_url || fallbackImg;
+  // Skip scraped image if source URL is a shared listing page (same image for many events)
+  const isSharedUrl = (_sourceUrlCount[url] || 0) > 1;
+  const hasRealImage = !!ev.image_url && !isSharedUrl;
+  const imgSrc = hasRealImage ? ev.image_url : fallbackImg;
 
   const titleHtml = esc(title);
 
@@ -582,12 +584,13 @@ function handleImgError(img) {
     return;
   }
   img.dataset.tried = '1';
-  // Try server-side enrichment via source URL
-  if (sourceUrl) {
+  // Try server-side enrichment via source URL (skip shared listing pages)
+  if (sourceUrl && (_sourceUrlCount[sourceUrl] || 0) <= 1) {
     fetch(apiUrl('/enrich-image?url=' + encodeURIComponent(sourceUrl)))
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data && data.image_url) {
+        if (data && data.image_url && !(_enrichedImages[data.image_url] >= 1)) {
+          _enrichedImages[data.image_url] = (_enrichedImages[data.image_url] || 0) + 1;
           img.src = data.image_url;
         } else if (fallback) {
           img.src = fallback;
@@ -606,6 +609,17 @@ function handleImgError(img) {
   }
 }
 
+// Track source_url usage to detect shared listing pages and prevent duplicate images
+const _sourceUrlCount = {};  // source_url -> count of events using it
+const _enrichedImages = {};  // image_url -> count of times assigned
+function countSourceUrls() {
+  _sourceUrlCount.length = 0;
+  allEvents.forEach(ev => {
+    const u = ev.source_url || '';
+    if (u) _sourceUrlCount[u] = (_sourceUrlCount[u] || 0) + 1;
+  });
+}
+
 // Lazy-enrich images: when a card scrolls into view and has no real image,
 // fetch the actual event image from the source page
 const enrichObserver = new IntersectionObserver((entries) => {
@@ -615,10 +629,15 @@ const enrichObserver = new IntersectionObserver((entries) => {
     enrichObserver.unobserve(img);
     const sourceUrl = img.dataset.source;
     if (!sourceUrl) return;
+    // Skip enrichment for shared listing pages (>1 event uses this URL)
+    if ((_sourceUrlCount[sourceUrl] || 0) > 1) return;
     fetch(apiUrl('/enrich-image?url=' + encodeURIComponent(sourceUrl)))
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data && data.image_url) {
+          // Skip if this image is already shown on another card
+          if ((_enrichedImages[data.image_url] || 0) >= 1) return;
+          _enrichedImages[data.image_url] = (_enrichedImages[data.image_url] || 0) + 1;
           img.dataset.tried = '1';
           img.src = data.image_url;
         }
@@ -656,6 +675,7 @@ async function loadAll() {
       const db = new Date(b.start_time || 0);
       return db - da;
     });
+    countSourceUrls();
     applyFilters();
   } catch (err) {
     document.getElementById('feed').innerHTML =

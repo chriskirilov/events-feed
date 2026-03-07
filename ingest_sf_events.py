@@ -8,7 +8,9 @@ deduplicates, and merges into the unified event_data.csv feed.
 
 Sources covered:
   - Eventbrite SF (10 categories)
-  - SF Funcheap (free & cheap events)
+  - SF Funcheap (free & cheap events, 30-day daily pages + category pages)
+  - DoTheBay (Bay Area events, 30-day daily + category + venue pages)
+  - Lu.ma (tech/startup/AI meetups, SF calendars, API + HTML scraping)
   - SF Station (music, art, nightlife, food, comedy, sports, family, community)
   - Do415 (curated SF events)
   - SF Chronicle / Datebook (music, art, theater, comedy, food, nightlife, family)
@@ -39,6 +41,8 @@ import pandas as pd
 from scrapers.base import BaseScraper, Event
 from scrapers.eventbrite import EventbriteScraper
 from scrapers.funcheap import FuncheapScraper
+from scrapers.dothebay import DoTheBayScraper
+from scrapers.luma import LumaScraper
 from scrapers.sfstation import SFStationScraper
 from scrapers.do415 import Do415Scraper
 from scrapers.sfchronicle import SFChronicleScraper
@@ -56,6 +60,8 @@ CSV_PATH = "event_data.csv"
 ALL_SCRAPERS: list[BaseScraper] = [
     EventbriteScraper(),
     FuncheapScraper(),
+    DoTheBayScraper(),
+    LumaScraper(),
     SFStationScraper(),
     Do415Scraper(),
     SFChronicleScraper(),

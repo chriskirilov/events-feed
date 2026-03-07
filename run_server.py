@@ -306,9 +306,9 @@ function parseTags(t) {
 }
 
 const CAT_EMOJIS = {
-  music: '\u{1F3B5}', arts: '\u{1F3A8}', food: '\u{1F37D}\uFE0F',
-  sports: '\u{1F3C3}', nightlife: '\u{1F378}', community: '\u{1F91D}',
-  learning: '\u{1F4DA}', outdoors: '\u{1F333}', family: '\u{1F46A}'
+  music: '🎵', arts: '🎨', food: '🍽️',
+  sports: '🏃', nightlife: '🍸', community: '🤝',
+  learning: '📚', outdoors: '🌳', family: '👪'
 };
 
 const CAT_IMAGES = {

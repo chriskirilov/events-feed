@@ -199,14 +199,14 @@ FEED_HTML = """<!DOCTYPE html>
   <div class="filters" id="filters">
     <button class="active" data-cat="all" title="All">&#x2728;</button>
     <button data-cat="music" title="Music">&#x1F3B5;</button>
-    <button data-cat="food_and_drink" title="Food & Drink">&#x1F37D;&#xFE0F;</button>
-    <button data-cat="arts_and_culture" title="Arts & Culture">&#x1F3A8;</button>
-    <button data-cat="tech" title="Tech">&#x1F4BB;</button>
-    <button data-cat="sports_and_fitness" title="Sports">&#x1F3C3;</button>
-    <button data-cat="nightlife" title="Nightlife">&#x1F378;</button>
-    <button data-cat="family_and_kids" title="Family">&#x1F46A;</button>
+    <button data-cat="arts" title="Arts & Culture">&#x1F3A8;</button>
+    <button data-cat="food" title="Food & Drink">&#x1F37D;&#xFE0F;</button>
+    <button data-cat="sports" title="Sports & Fitness">&#x1F3C3;</button>
+    <button data-cat="nightlife" title="Nightlife & Comedy">&#x1F378;</button>
     <button data-cat="community" title="Community">&#x1F91D;</button>
-    <button data-cat="other" title="Other">&#x1F4CC;</button>
+    <button data-cat="learning" title="Learning">&#x1F4DA;</button>
+    <button data-cat="outdoors" title="Outdoors & Festivals">&#x1F333;</button>
+    <button data-cat="family" title="Family & Kids">&#x1F46A;</button>
   </div>
 </div>
 
@@ -312,9 +312,40 @@ function esc(s) {
   return d.innerHTML;
 }
 
+// Category groups mapping filter buttons to actual CSV category values
+const CAT_GROUPS = {
+  music:      ['concert', 'live_music', 'music'],
+  arts:       ['arts_and_culture', 'theater', 'museum', 'architecture', 'art', 'culture', 'heritage', 'film', 'dance'],
+  food:       ['food_and_dining', 'bar_and_mixology', 'beer_and_brewery', 'farmers_market', 'food', 'drink'],
+  sports:     ['sports', 'run_club', 'health_and_wellness', 'fitness', 'basketball'],
+  nightlife:  ['nightlife', 'comedy', 'trivia_night', 'stand-up'],
+  community:  ['community_and_social', 'volunteer_and_charity', 'civic_and_public_service', 'volunteer', 'networking', 'jobs_and_networking'],
+  learning:   ['education', 'panel', 'library', 'books'],
+  outdoors:   ['festival', 'park', 'outdoor_movie', 'parade', 'block_party', 'nature', 'outdoors'],
+  family:     ['family_and_kids', 'pets', 'family', 'kids'],
+};
+
+function getEventCats(ev) {
+  const raw = (ev.category || '').toLowerCase();
+  // Try to parse as JSON array (handles ["Music", "Education"] style)
+  if (raw.startsWith('[')) {
+    try {
+      const arr = JSON.parse(raw.replace(/'/g, '"'));
+      if (Array.isArray(arr)) return arr.map(s => s.toLowerCase().trim());
+    } catch {}
+  }
+  return [raw.replace(/_/g, ' '), raw];
+}
+
+function matchesCat(ev, group) {
+  const cats = getEventCats(ev);
+  const keywords = CAT_GROUPS[group] || [];
+  return cats.some(c => keywords.some(k => c.includes(k)));
+}
+
 function applyFilters() {
   filtered = allEvents.filter(ev => {
-    if (activeCat !== 'all' && (ev.category || 'other') !== activeCat) return false;
+    if (activeCat !== 'all' && !matchesCat(ev, activeCat)) return false;
     if (searchTerm) {
       const s = searchTerm.toLowerCase();
       const hay = ((ev.title || '') + ' ' + (ev.description || '') + ' ' + (ev.location || '') + ' ' + (ev.tags || '')).toLowerCase();

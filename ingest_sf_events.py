@@ -171,7 +171,7 @@ def events_to_dataframe(events: list[Event]) -> pd.DataFrame:
     # Ensure column order matches existing CSV
     expected_cols = [
         "creation_date", "title", "description", "start_time", "end_time",
-        "region", "source_url", "tags", "category", "location",
+        "region", "source_url", "tags", "category", "location", "image_url",
     ]
     for col in expected_cols:
         if col not in df.columns:

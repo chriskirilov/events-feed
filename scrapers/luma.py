@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
 
-from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime
+from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime, extract_image_from_jsonld, extract_image_from_card
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +128,7 @@ def _extract_events_from_html(soup: BeautifulSoup, page_url: str, seen: set) -> 
                         item.get("name", "") + " " + item.get("description", "")
                     ),
                     location=loc,
+                    image_url=extract_image_from_jsonld(item),
                     source_name="luma",
                 ))
         except (json.JSONDecodeError, KeyError, TypeError):
@@ -178,6 +179,7 @@ def _extract_events_from_html(soup: BeautifulSoup, page_url: str, seen: set) -> 
             tags=json.dumps(["Tech", "Startup", "Community"]),
             category=guess_category(title),
             location=loc,
+            image_url=extract_image_from_card(card),
             source_name="luma",
         ))
 
@@ -254,6 +256,9 @@ def _parse_next_data(props: dict, page_url: str, seen: set) -> list[Event]:
         if not tags:
             tags = ["Tech", "Community"]
 
+        # Extract image from Next.js event data
+        img = event.get("cover_url", "") or event.get("image_url", "") or event.get("cover_image_url", "") or ""
+
         events.append(Event(
             title=clean_text(title),
             description=clean_text(desc)[:500],
@@ -263,6 +268,7 @@ def _parse_next_data(props: dict, page_url: str, seen: set) -> list[Event]:
             tags=json.dumps(tags[:5]),
             category=guess_category(title + " " + desc),
             location=loc,
+            image_url=img,
             source_name="luma",
         ))
 
@@ -287,6 +293,8 @@ def _parse_next_data(props: dict, page_url: str, seen: set) -> list[Event]:
                 if city:
                     loc = f"{city}, {region}"
 
+            img = event.get("cover_url", "") or event.get("image_url", "") or ""
+
             events.append(Event(
                 title=clean_text(title),
                 description=clean_text(desc)[:500],
@@ -296,6 +304,7 @@ def _parse_next_data(props: dict, page_url: str, seen: set) -> list[Event]:
                 tags=json.dumps(["Tech", "Community"]),
                 category=guess_category(title + " " + desc),
                 location=loc,
+                image_url=img,
                 source_name="luma",
             ))
 
@@ -342,6 +351,8 @@ def _try_luma_api(session: requests.Session, seen: set) -> list[Event]:
                 if ev_url:
                     seen.add(ev_url)
 
+                img = ev.get("cover_url", "") or ev.get("image_url", "") or ev.get("cover_image_url", "") or ""
+
                 events.append(Event(
                     title=clean_text(title),
                     description=clean_text(ev.get("description", ""))[:500],
@@ -351,6 +362,7 @@ def _try_luma_api(session: requests.Session, seen: set) -> list[Event]:
                     tags=json.dumps(["Tech", "Community"]),
                     category=guess_category(title + " " + ev.get("description", "")),
                     location="San Francisco, CA",
+                    image_url=img,
                     source_name="luma",
                 ))
         except Exception as e:
@@ -408,13 +420,19 @@ class LumaScraper(BaseScraper):
 
         # 5. Enrich events with short descriptions
         for ev in events:
-            if ev.source_url and len(ev.description) < 50 and "lu.ma" in ev.source_url:
+            if ev.source_url and (len(ev.description) < 50 or not ev.image_url) and "lu.ma" in ev.source_url:
                 detail = _fetch(ev.source_url, session)
                 if detail:
                     # Try og:description meta
-                    og_desc = detail.select_one('meta[property="og:description"]')
-                    if og_desc:
-                        ev.description = clean_text(og_desc.get("content", ""))[:500]
+                    if len(ev.description) < 50:
+                        og_desc = detail.select_one('meta[property="og:description"]')
+                        if og_desc:
+                            ev.description = clean_text(og_desc.get("content", ""))[:500]
+                    # Try og:image meta
+                    if not ev.image_url:
+                        og_img = detail.select_one('meta[property="og:image"]')
+                        if og_img:
+                            ev.image_url = og_img.get("content", "")
 
         logger.info(f"[luma] Total: {len(events)} unique events")
         return events

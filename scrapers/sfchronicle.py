@@ -6,7 +6,7 @@ Source: https://datebook.sfchronicle.com/events
 import json
 import requests
 from bs4 import BeautifulSoup
-from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime
+from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime, extract_image_from_jsonld, extract_image_from_card
 
 BASE_URL = "https://datebook.sfchronicle.com"
 HEADERS = {
@@ -67,6 +67,7 @@ class SFChronicleScraper(BaseScraper):
                             tags=json.dumps([path.split("/")[-1].replace("-", " ").title() or "Events"]),
                             category=guess_category(item.get("name", "") + " " + item.get("description", "")),
                             location=location,
+                            image_url=extract_image_from_jsonld(item),
                             source_name=self.name,
                         ))
                 except (json.JSONDecodeError, KeyError):
@@ -109,6 +110,7 @@ class SFChronicleScraper(BaseScraper):
                     tags=json.dumps([cat_hint.replace("-", " ").title()] if cat_hint else ["Events"]),
                     category=guess_category(title + " " + desc + " " + cat_hint),
                     location=location,
+                    image_url=extract_image_from_card(card),
                     source_name=self.name,
                 ))
 

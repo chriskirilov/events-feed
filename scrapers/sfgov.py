@@ -8,7 +8,7 @@ Sources:
 import json
 import requests
 from bs4 import BeautifulSoup
-from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime
+from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime, extract_image_from_jsonld, extract_image_from_card
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
@@ -70,6 +70,7 @@ class SFGovScraper(BaseScraper):
                             tags=json.dumps(source["tags"]),
                             category=guess_category(item.get("name", "")),
                             location="San Francisco, CA",
+                            image_url=extract_image_from_jsonld(item),
                             source_name=self.name,
                         ))
                 except (json.JSONDecodeError, KeyError):
@@ -112,6 +113,7 @@ class SFGovScraper(BaseScraper):
                     tags=json.dumps(source["tags"]),
                     category=guess_category(title + " " + desc),
                     location=location,
+                    image_url=extract_image_from_card(card),
                     source_name=self.name,
                 ))
 

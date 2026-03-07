@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
 
-from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime
+from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime, extract_image_from_card
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +146,9 @@ def _extract_events_from_page(soup: BeautifulSoup, page_url: str, seen: set) -> 
         if price and price not in desc:
             desc = f"[{price}] {desc}" if desc else price
 
+        # Extract image from article card
+        img_url = extract_image_from_card(article)
+
         events.append(Event(
             title=title,
             description=desc,
@@ -154,6 +157,7 @@ def _extract_events_from_page(soup: BeautifulSoup, page_url: str, seen: set) -> 
             tags=json.dumps(tags),
             category=guess_category(title + " " + desc),
             location=loc,
+            image_url=img_url,
             source_name="funcheap",
         ))
 

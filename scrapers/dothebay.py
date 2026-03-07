@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
 
-from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime
+from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime, extract_image_from_jsonld, extract_image_from_card
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +123,7 @@ def _extract_events_from_page(
                         item.get("name", "") + " " + item.get("description", "")
                     ),
                     location=loc,
+                    image_url=extract_image_from_jsonld(item),
                     source_name="dothebay",
                 ))
         except (json.JSONDecodeError, KeyError, TypeError):
@@ -220,6 +221,7 @@ def _extract_events_from_page(
             tags=json.dumps(tags),
             category=guess_category(title + " " + desc + " " + url_cat),
             location=loc,
+            image_url=extract_image_from_card(card),
             source_name="dothebay",
         ))
 

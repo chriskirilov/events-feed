@@ -7,7 +7,7 @@ import json
 import re
 import requests
 from bs4 import BeautifulSoup
-from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime
+from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime, extract_image_from_jsonld, extract_image_from_card
 
 SEARCH_URL = "https://www.eventbrite.com/d/ca--san-francisco/events/"
 CATEGORIES = [
@@ -67,6 +67,7 @@ class EventbriteScraper(BaseScraper):
                             tags=json.dumps(self._extract_tags(item)),
                             category=guess_category(item.get("name", "") + " " + item.get("description", "")),
                             location=self._extract_location(item),
+                            image_url=extract_image_from_jsonld(item),
                             source_name=self.name,
                         ))
                 except (json.JSONDecodeError, KeyError):
@@ -99,6 +100,7 @@ class EventbriteScraper(BaseScraper):
                     tags=json.dumps([cat_slug.replace("--", " & ").replace("-", " ").title()]),
                     category=guess_category(title + " " + cat_slug),
                     location=loc_str if loc_str else "San Francisco, CA",
+                    image_url=extract_image_from_card(card),
                     source_name=self.name,
                 ))
 

@@ -6,7 +6,7 @@ Source: https://www.sfstation.com/events/
 import json
 import requests
 from bs4 import BeautifulSoup
-from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime
+from .base import BaseScraper, Event, clean_text, guess_category, parse_datetime, extract_image_from_card
 
 BASE_URL = "https://www.sfstation.com"
 HEADERS = {
@@ -82,6 +82,7 @@ class SFStationScraper(BaseScraper):
                     tags=json.dumps([cat_hint.replace("-", " ").title()] if cat_hint else ["Events"]),
                     category=guess_category(combined_text),
                     location=location,
+                    image_url=extract_image_from_card(item),
                     source_name=self.name,
                 ))
 

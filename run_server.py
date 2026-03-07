@@ -313,7 +313,7 @@ function renderCard(ev) {
   const url = ev.source_url || '';
 
   const groups = getMatchingGroups(ev);
-  const imgSrc = groups.length ? CAT_IMAGES[groups[0]] : CAT_IMAGES._default;
+  const imgSrc = ev.image_url || (groups.length ? CAT_IMAGES[groups[0]] : CAT_IMAGES._default);
 
   const titleHtml = url
     ? '<a href="' + url + '" target="_blank" rel="noopener">' + esc(title) + '</a>'

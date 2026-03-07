@@ -22,6 +22,7 @@ class Event:
     location: str = "San Francisco, CA"
     region: str = "us"
     creation_date: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    image_url: str = ""
     source_name: str = ""
 
     def to_dict(self):
@@ -139,6 +140,35 @@ def parse_datetime(dt_str: str) -> Optional[str]:
         except ValueError:
             continue
     return dt_str
+
+
+def extract_image_from_jsonld(item: dict) -> str:
+    """Extract image URL from a JSON-LD item."""
+    img = item.get("image", "")
+    if isinstance(img, list):
+        img = img[0] if img else ""
+    if isinstance(img, dict):
+        img = img.get("url", img.get("contentUrl", ""))
+    return str(img).strip() if img else ""
+
+
+def extract_image_from_card(card) -> str:
+    """Extract image URL from a BeautifulSoup card element."""
+    # Try img tag
+    img = card.select_one("img[src]")
+    if img:
+        src = img.get("src", "")
+        if src and not src.startswith("data:"):
+            return src
+    # Try background-image in style
+    for el in [card] + card.select("[style*='background']"):
+        style = el.get("style", "")
+        if "url(" in style:
+            import re as _re
+            m = _re.search(r"url\(['\"]?([^'\")\s]+)", style)
+            if m:
+                return m.group(1)
+    return ""
 
 
 class BaseScraper:

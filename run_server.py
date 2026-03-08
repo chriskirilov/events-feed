@@ -345,73 +345,228 @@ const CAT_EMOJIS = {
   learning: '📚', outdoors: '🌳', family: '👪'
 };
 
-const CAT_IMAGES = {
-  music: [
-    'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&q=80',
-    'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
-    'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80',
-    'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80',
-  ],
-  arts: [
-    'https://images.unsplash.com/photo-1536924940846-227afb31e2a5?w=800&q=80',
-    'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800&q=80',
-    'https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=800&q=80',
-    'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&q=80',
-  ],
-  food: [
-    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80',
-    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80',
-    'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80',
-    'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&q=80',
-  ],
-  sports: [
-    'https://images.unsplash.com/photo-1461896836934-bd45ba8482fe?w=800&q=80',
-    'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=800&q=80',
-    'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80',
-    'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800&q=80',
-  ],
-  nightlife: [
-    'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80',
-    'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80',
-    'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&q=80',
-    'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80',
-  ],
-  community: [
-    'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&q=80',
-    'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80',
-    'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&q=80',
-    'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&q=80',
-  ],
-  learning: [
-    'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&q=80',
-    'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80',
-    'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80',
-    'https://images.unsplash.com/photo-1513258496099-48168024aec0?w=800&q=80',
-  ],
-  outdoors: [
-    'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&q=80',
-    'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80',
-    'https://images.unsplash.com/photo-1501555088652-021faa106b9b?w=800&q=80',
-    'https://images.unsplash.com/photo-1533240332313-0db49b459ad6?w=800&q=80',
-  ],
-  family: [
-    'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&q=80',
-    'https://images.unsplash.com/photo-1536640712-4d4c36ff0e4e?w=800&q=80',
-    'https://images.unsplash.com/photo-1472586662442-3eec04b9dbda?w=800&q=80',
-    'https://images.unsplash.com/photo-1609220136736-443140cffec6?w=800&q=80',
-  ],
-  _default: [
-    'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80',
-    'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
-    'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&q=80',
-    'https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800&q=80',
-  ],
-};
-function pickCatImage(cat, title) {
-  const imgs = CAT_IMAGES[cat] || CAT_IMAGES._default;
+// Keyword-to-image mapping: matches event title/tags/description to relevant Unsplash photos.
+// Each entry: [keywords_array, [photo_urls]] — first matching entry wins.
+const KEYWORD_IMAGES = [
+  // --- Sports subcategories ---
+  [['basketball', 'ncaa', 'nba', 'hoops', 'warriors', 'march madness'],
+    ['https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&q=80',
+     'https://images.unsplash.com/photo-1574623452334-1e0ac2b3ccb4?w=800&q=80']],
+  [['baseball', 'giants', 'mlb', 'softball'],
+    ['https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=800&q=80',
+     'https://images.unsplash.com/photo-1529768167801-9173d94c2a42?w=800&q=80']],
+  [['soccer', 'football', 'fútbol', '49ers', 'nfl'],
+    ['https://images.unsplash.com/photo-1551958219-acbc608c6377?w=800&q=80',
+     'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&q=80']],
+  [['marathon', 'running', 'run club', '5k', '10k', 'half marathon', 'jog'],
+    ['https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800&q=80',
+     'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=800&q=80']],
+  [['yoga', 'pilates', 'meditation', 'mindfulness', 'wellness retreat'],
+    ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80',
+     'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80']],
+  [['cycling', 'bike', 'bicycle', 'criterium'],
+    ['https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&q=80',
+     'https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=800&q=80']],
+  [['surf', 'surfing', 'ocean swim', 'paddleboard'],
+    ['https://images.unsplash.com/photo-1502680390548-bdbac40a0735?w=800&q=80',
+     'https://images.unsplash.com/photo-1455729552457-5c322e55d633?w=800&q=80']],
+  [['tennis', 'pickleball', 'badminton'],
+    ['https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&q=80',
+     'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=800&q=80']],
+  // --- Food & Drink subcategories ---
+  [['chocolate', 'cocoa', 'cacao', 'truffle'],
+    ['https://images.unsplash.com/photo-1511381939415-e44015466834?w=800&q=80',
+     'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=800&q=80']],
+  [['wine', 'winery', 'vineyard', 'sommelier', 'wine tasting'],
+    ['https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&q=80',
+     'https://images.unsplash.com/photo-1474722883778-792e7990302f?w=800&q=80']],
+  [['beer', 'brewery', 'craft beer', 'ale', 'ipa', 'brew fest'],
+    ['https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=800&q=80',
+     'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=800&q=80']],
+  [['cocktail', 'mixology', 'spirits', 'bartend'],
+    ['https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80',
+     'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&q=80']],
+  [['coffee', 'café', 'cafe', 'latte', 'espresso', 'barista'],
+    ['https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80',
+     'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80']],
+  [['taco', 'mexican', 'burrito', 'tamale'],
+    ['https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&q=80',
+     'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=800&q=80']],
+  [['pizza', 'italian', 'pasta'],
+    ['https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80',
+     'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800&q=80']],
+  [['sushi', 'japanese', 'ramen', 'sake'],
+    ['https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&q=80',
+     'https://images.unsplash.com/photo-1553621042-f6e147245754?w=800&q=80']],
+  [['bbq', 'barbecue', 'grill', 'cookout', 'smoke'],
+    ['https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800&q=80',
+     'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80']],
+  [['farmers market', 'farm stand', 'produce', 'harvest'],
+    ['https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&q=80',
+     'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80']],
+  [['bake', 'baking', 'pastry', 'cake', 'dessert', 'cupcake'],
+    ['https://images.unsplash.com/photo-1486427944544-d2c246c4df7e?w=800&q=80',
+     'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=80']],
+  // --- Arts subcategories ---
+  [['museum', 'exhibit', 'exhibition', 'gallery', 'sfmoma', 'de young'],
+    ['https://images.unsplash.com/photo-1554907984-15263bfd63bd?w=800&q=80',
+     'https://images.unsplash.com/photo-1566054757965-8c4085344c96?w=800&q=80']],
+  [['theater', 'theatre', 'broadway', 'play', 'musical', 'opera', 'ballet'],
+    ['https://images.unsplash.com/photo-1503095396549-807759245b35?w=800&q=80',
+     'https://images.unsplash.com/photo-1507924538820-ede94a04019d?w=800&q=80']],
+  [['film', 'movie', 'cinema', 'screening', 'documentary'],
+    ['https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=80',
+     'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&q=80']],
+  [['painting', 'watercolor', 'canvas', 'mural', 'fresco'],
+    ['https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&q=80',
+     'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80']],
+  [['craft', 'handmade', 'artisan', 'maker', 'diy', 'knit', 'pottery', 'ceramic'],
+    ['https://images.unsplash.com/photo-1452860606245-08b6178d0e3a?w=800&q=80',
+     'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800&q=80']],
+  [['dance', 'salsa', 'swing', 'tango', 'ballet', 'hip hop dance'],
+    ['https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?w=800&q=80',
+     'https://images.unsplash.com/photo-1547153760-18fc86324498?w=800&q=80']],
+  [['photography', 'photo walk', 'camera'],
+    ['https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80',
+     'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=800&q=80']],
+  [['book', 'author', 'reading', 'literary', 'poetry', 'poem', 'spoken word'],
+    ['https://images.unsplash.com/photo-1524578271613-d550eacf6090?w=800&q=80',
+     'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&q=80']],
+  // --- Music subcategories ---
+  [['jazz', 'blues', 'sfjazz'],
+    ['https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=800&q=80',
+     'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&q=80']],
+  [['symphony', 'orchestra', 'classical', 'chamber music', 'philharmonic'],
+    ['https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=800&q=80',
+     'https://images.unsplash.com/photo-1519683109079-d5f539e1542f?w=800&q=80']],
+  [['dj', 'edm', 'electronic', 'techno', 'house music', 'rave'],
+    ['https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80',
+     'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&q=80']],
+  [['hip hop', 'rap', 'r&b', 'hip-hop'],
+    ['https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80',
+     'https://images.unsplash.com/photo-1547355253-ff0740f6e8c1?w=800&q=80']],
+  [['rock', 'punk', 'metal', 'indie rock', 'garage'],
+    ['https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=800&q=80',
+     'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&q=80']],
+  [['karaoke', 'sing along', 'open mic'],
+    ['https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&q=80',
+     'https://images.unsplash.com/photo-1478147427282-58a87a120781?w=800&q=80']],
+  // --- Community & Social ---
+  [['volunteer', 'cleanup', 'service day', 'habitat', 'charity'],
+    ['https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800&q=80',
+     'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800&q=80']],
+  [['protest', 'march', 'rally', 'activism', 'justice', 'mlk', 'martin luther king'],
+    ['https://images.unsplash.com/photo-1591084728795-1149f32d9866?w=800&q=80',
+     'https://images.unsplash.com/photo-1494672999015-5329bbef6054?w=800&q=80']],
+  [['networking', 'meetup', 'mixer', 'happy hour', 'social hour', 'mingle'],
+    ['https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&q=80',
+     'https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&q=80']],
+  [['tech', 'startup', 'hackathon', 'coding', 'developer', 'ai ', 'artificial intelligence'],
+    ['https://images.unsplash.com/photo-1504384764586-bb4cdc1707b0?w=800&q=80',
+     'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&q=80']],
+  // --- Nightlife ---
+  [['comedy', 'stand-up', 'standup', 'improv', 'comedian', 'laugh'],
+    ['https://images.unsplash.com/photo-1585699324551-f6c309eedeca?w=800&q=80',
+     'https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&q=80']],
+  [['trivia', 'quiz', 'game night', 'board game', 'pub quiz'],
+    ['https://images.unsplash.com/photo-1606503153255-59d8b8b82176?w=800&q=80',
+     'https://images.unsplash.com/photo-1611371805429-8b5c1b2c34ba?w=800&q=80']],
+  [['drag', 'burlesque', 'cabaret', 'variety show'],
+    ['https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80',
+     'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80']],
+  // --- Outdoors ---
+  [['hike', 'hiking', 'trail', 'nature walk', 'trek'],
+    ['https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80',
+     'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80']],
+  [['garden', 'botanical', 'flower', 'plant', 'bloom'],
+    ['https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=80',
+     'https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=800&q=80']],
+  [['beach', 'ocean beach', 'seaside', 'pier', 'waterfront'],
+    ['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80',
+     'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&q=80']],
+  [['parade', 'float', 'procession', 'st. patrick', 'pride'],
+    ['https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&q=80',
+     'https://images.unsplash.com/photo-1472457897821-70d3819a0e24?w=800&q=80']],
+  [['festival', 'fair', 'carnival', 'block party', 'street fair'],
+    ['https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80',
+     'https://images.unsplash.com/photo-1472653816316-3ad6f10a6592?w=800&q=80']],
+  // --- Family & Kids ---
+  [['kids', 'children', 'toddler', 'storytime', 'story time', 'puppet'],
+    ['https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=800&q=80',
+     'https://images.unsplash.com/photo-1587654780291-39c9404d7dd0?w=800&q=80']],
+  [['dog', 'puppy', 'canine', 'pet', 'paws'],
+    ['https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&q=80',
+     'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&q=80']],
+  // --- Learning ---
+  [['workshop', 'class', 'seminar', 'lecture', 'talk', 'panel'],
+    ['https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&q=80',
+     'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80']],
+  [['science', 'astronomy', 'planetarium', 'stem', 'lab'],
+    ['https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&q=80',
+     'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80']],
+  [['history', 'heritage', 'historic', 'memorial', 'monument'],
+    ['https://images.unsplash.com/photo-1461360370896-922624d12a74?w=800&q=80',
+     'https://images.unsplash.com/photo-1553028826-f4804a6dba3b?w=800&q=80']],
+  // --- Broad category fallbacks (matched last) ---
+  [['concert', 'live music', 'music', 'band', 'singer', 'songwriter'],
+    ['https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&q=80',
+     'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=80',
+     'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80']],
+  [['art', 'artist', 'creative', 'design'],
+    ['https://images.unsplash.com/photo-1536924940846-227afb31e2a5?w=800&q=80',
+     'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800&q=80',
+     'https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=800&q=80']],
+  [['food', 'restaurant', 'dining', 'chef', 'culinary', 'tasting', 'taste'],
+    ['https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80',
+     'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80',
+     'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&q=80']],
+  [['sport', 'athletic', 'fitness', 'gym', 'workout', 'exercise'],
+    ['https://images.unsplash.com/photo-1461896836934-bd45ba8482fe?w=800&q=80',
+     'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=800&q=80',
+     'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800&q=80']],
+  [['nightlife', 'club', 'lounge', 'bar', 'night out', 'party'],
+    ['https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80',
+     'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80',
+     'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80']],
+  [['community', 'neighborhood', 'social', 'gathering'],
+    ['https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&q=80',
+     'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80',
+     'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&q=80']],
+  [['outdoor', 'park', 'nature', 'outside'],
+    ['https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&q=80',
+     'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80',
+     'https://images.unsplash.com/photo-1501555088652-021faa106b9b?w=800&q=80']],
+  [['family', 'kid', 'child'],
+    ['https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&q=80',
+     'https://images.unsplash.com/photo-1536640712-4d4c36ff0e4e?w=800&q=80',
+     'https://images.unsplash.com/photo-1472586662442-3eec04b9dbda?w=800&q=80']],
+];
+
+const DEFAULT_IMAGES = [
+  'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80',
+  'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
+  'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&q=80',
+  'https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800&q=80',
+];
+
+function pickEventImage(ev) {
+  // Build a searchable text blob from title, tags, description, and category
+  const blob = ((ev.title || '') + ' ' + (ev.tags || '') + ' ' + (ev.description || '') + ' ' + (ev.category || '')).toLowerCase();
+  // Try each keyword cluster in order (specific first, broad last)
+  for (const [keywords, imgs] of KEYWORD_IMAGES) {
+    if (keywords.some(kw => blob.includes(kw))) {
+      // Pick deterministically based on title hash so same event always gets same image
+      let hash = 0;
+      const t = ev.title || '';
+      for (let i = 0; i < t.length; i++) hash = ((hash << 5) - hash + t.charCodeAt(i)) | 0;
+      return imgs[Math.abs(hash) % imgs.length];
+    }
+  }
+  // No keyword match — use default
   let hash = 0;
-  for (let i = 0; i < title.length; i++) hash = ((hash << 5) - hash + title.charCodeAt(i)) | 0;
-  return imgs[Math.abs(hash) % imgs.length];
+  const t = ev.title || '';
+  for (let i = 0; i < t.length; i++) hash = ((hash << 5) - hash + t.charCodeAt(i)) | 0;
+  return DEFAULT_IMAGES[Math.abs(hash) % DEFAULT_IMAGES.length];
 }
 
 function getMatchingGroups(ev) {
@@ -430,8 +585,7 @@ function renderCard(ev) {
   const url = ev.source_url || '';
 
   const groups = getMatchingGroups(ev);
-  const fallbackCat = groups.length ? groups[0] : '_default';
-  const fallbackImg = pickCatImage(fallbackCat, title);
+  const fallbackImg = pickEventImage(ev);
   // Skip scraped image if source URL is a shared listing page (same image for many events)
   const isSharedUrl = (_sourceUrlCount[url] || 0) > 1;
   const hasRealImage = !!ev.image_url && !isSharedUrl;
@@ -464,7 +618,7 @@ function renderCard(ev) {
 
   const inner = '<div class="card">' +
     '<div class="card-img-wrap">' +
-    '<img class="card-img" src="' + imgSrc + '" alt="" loading="lazy" data-fallback="' + fallbackImg + '" data-source="' + esc(url) + '"' + (hasRealImage ? '' : ' data-needs-enrich="1"') + ' onerror="handleImgError(this)">' +
+    '<img class="card-img" src="' + imgSrc + '" alt="" loading="lazy" data-fallback="' + fallbackImg + '" data-source="' + esc(url) + '" data-title="' + esc(title) + '"' + (hasRealImage ? '' : ' data-needs-enrich="1"') + ' onerror="handleImgError(this)">' +
     '<div class="card-img-overlay"></div>' +
     dateBadge + catBadge +
     '</div>' +
@@ -584,9 +738,12 @@ function handleImgError(img) {
     return;
   }
   img.dataset.tried = '1';
-  // Try server-side enrichment via source URL (skip shared listing pages)
-  if (sourceUrl && (_sourceUrlCount[sourceUrl] || 0) <= 1) {
-    fetch(apiUrl('/enrich-image?url=' + encodeURIComponent(sourceUrl)))
+  const eventTitle = img.dataset.title || '';
+  // Try server-side enrichment via source URL
+  if (sourceUrl) {
+    const enrichUrl = '/enrich-image?url=' + encodeURIComponent(sourceUrl) +
+      (eventTitle ? '&title=' + encodeURIComponent(eventTitle) : '');
+    fetch(apiUrl(enrichUrl))
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data && data.image_url && !(_enrichedImages[data.image_url] >= 1)) {
@@ -621,17 +778,18 @@ function countSourceUrls() {
 }
 
 // Lazy-enrich images: when a card scrolls into view and has no real image,
-// fetch the actual event image from the source page
+// fetch the actual event image from the source page (passes title for smart link-following)
 const enrichObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (!entry.isIntersecting) return;
     const img = entry.target;
     enrichObserver.unobserve(img);
     const sourceUrl = img.dataset.source;
+    const eventTitle = img.dataset.title || '';
     if (!sourceUrl) return;
-    // Skip enrichment for shared listing pages (>1 event uses this URL)
-    if ((_sourceUrlCount[sourceUrl] || 0) > 1) return;
-    fetch(apiUrl('/enrich-image?url=' + encodeURIComponent(sourceUrl)))
+    const enrichUrl = '/enrich-image?url=' + encodeURIComponent(sourceUrl) +
+      (eventTitle ? '&title=' + encodeURIComponent(eventTitle) : '');
+    fetch(apiUrl(enrichUrl))
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data && data.image_url) {
@@ -794,39 +952,86 @@ _image_cache = {}  # in-memory cache: source_url -> image_url (or "")
 
 @app.route("/enrich-image")
 def enrich_image():
-    """Fetch og:image from an event's source page to fill missing images."""
+    """Fetch og:image from an event's source page to fill missing images.
+
+    Accepts optional 'title' param. When a title is provided and the source
+    page appears to be a listing (no specific og:image, or multiple events
+    share it), we try to find a link on the page that matches the event title
+    and follow it to get a more specific image.
+    """
     url = request.args.get("url", "").strip()
+    title = request.args.get("title", "").strip()
     if not url:
         return jsonify({"error": "missing url param"}), 400
 
+    # Build a cache key that includes title so different events on same listing
+    # page can have different images
+    cache_key = f"{url}|||{title}" if title else url
+
     # Check in-memory cache first
-    if url in _image_cache:
-        return jsonify({"image_url": _image_cache[url]})
+    if cache_key in _image_cache:
+        return jsonify({"image_url": _image_cache[cache_key]})
 
     try:
         import requests as req
         from bs4 import BeautifulSoup
+        from urllib.parse import urljoin
+        from difflib import SequenceMatcher
 
         resp = req.get(url, timeout=8, headers={"User-Agent": "Mozilla/5.0"})
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
 
-        # Try og:image first, then twitter:image
+        # If we have a title, try to find an event-specific link on the page
+        # and follow it to get a relevant og:image
+        if title:
+            title_lower = title.lower()
+            title_words = set(title_lower.split())
+            best_link = None
+            best_score = 0
+            for a_tag in soup.find_all("a", href=True):
+                link_text = a_tag.get_text(strip=True).lower()
+                if not link_text or len(link_text) < 5:
+                    continue
+                # Score by word overlap
+                link_words = set(link_text.split())
+                overlap = len(title_words & link_words)
+                # Also check fuzzy match
+                ratio = SequenceMatcher(None, title_lower, link_text).ratio()
+                score = overlap * 2 + ratio
+                if score > best_score and (overlap >= 2 or ratio > 0.5):
+                    best_score = score
+                    best_link = urljoin(url, a_tag["href"])
+
+            if best_link and best_link != url:
+                try:
+                    resp2 = req.get(best_link, timeout=8, headers={"User-Agent": "Mozilla/5.0"})
+                    resp2.raise_for_status()
+                    soup2 = BeautifulSoup(resp2.text, "html.parser")
+                    for prop in ("og:image", "twitter:image"):
+                        tag = soup2.select_one(f'meta[property="{prop}"]') or soup2.select_one(f'meta[name="{prop}"]')
+                        if tag and tag.get("content", "").startswith("http"):
+                            image_url = tag["content"]
+                            _image_cache[cache_key] = image_url
+                            return jsonify({"image_url": image_url})
+                except Exception:
+                    pass  # Fall through to original page og:image
+
+        # Try og:image first, then twitter:image from the original URL
         for prop in ("og:image", "twitter:image"):
             tag = soup.select_one(f'meta[property="{prop}"]') or soup.select_one(f'meta[name="{prop}"]')
             if tag and tag.get("content", "").startswith("http"):
                 image_url = tag["content"]
-                _image_cache[url] = image_url
-                # Update the CSV so we don't re-fetch next time
+                _image_cache[cache_key] = image_url
                 _update_csv_image(url, image_url)
                 return jsonify({"image_url": image_url})
 
-        _image_cache[url] = ""
+        _image_cache[cache_key] = ""
         return jsonify({"image_url": ""})
 
     except Exception as e:
         logging.debug(f"Image enrichment failed for {url}: {e}")
-        _image_cache[url] = ""
+        _image_cache[cache_key] = ""
         return jsonify({"image_url": ""})
 
 
